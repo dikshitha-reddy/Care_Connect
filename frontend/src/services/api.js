@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://care-connect-hyyx.onrender.com/api',
+  baseURL: 'http://localhost:8080/api',
 });
 
 // Add a request interceptor to include JWT token

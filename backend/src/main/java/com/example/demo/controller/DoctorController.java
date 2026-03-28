@@ -8,13 +8,13 @@ import com.example.demo.model.User;
 import com.example.demo.repository.AppointmentRepository;
 import com.example.demo.repository.PrescriptionRepository;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/doctor")
+@CrossOrigin("*")
 public class DoctorController {
 
     private final AppointmentRepository appointmentRepository;
@@ -26,26 +26,25 @@ public class DoctorController {
     }
 
     @GetMapping("/appointments")
-    public ResponseEntity<List<Appointment>> getMyAppointments(Authentication authentication) {
-        User doctor = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(appointmentRepository.findByDoctorId(doctor.getId()));
+    public ResponseEntity<List<Appointment>> getMyAppointments(@RequestParam Long doctorId) {
+        return ResponseEntity.ok(appointmentRepository.findByDoctorId(doctorId));
     }
 
     @PutMapping("/appointments/{id}/status")
     public ResponseEntity<?> updateAppointmentStatus(
             @PathVariable Long id, 
             @RequestParam String status, 
-            Authentication authentication) {
+            @RequestParam Long doctorId) {
         
         System.out.println("[DEBUG] Received status update request for appt " + id + " to " + status);
         
-        User doctor = (User) authentication.getPrincipal();
+        // No more authentication, we just use the doctorId from the request
         
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        if (!appointment.getDoctor().getId().equals(doctor.getId())) {
-            System.err.println("[AUTH] Doctor " + doctor.getId() + " unauthorized for appt " + id);
+        if (!appointment.getDoctor().getId().equals(doctorId)) {
+            System.err.println("[AUTH] Doctor " + doctorId + " unauthorized for appt " + id);
             return ResponseEntity.status(403).body("Unauthorized");
         }
 
@@ -57,8 +56,8 @@ public class DoctorController {
             
             // SIMULATE SMS NOTIFICATION
             if (appointmentStatus == AppointmentStatus.ACCEPTED) {
-                String docName = doctor.getName() != null ? doctor.getName() : "Doctor";
-                String docPhone = doctor.getPhone() != null ? doctor.getPhone() : "N/A";
+                String docName = appointment.getDoctor().getName() != null ? appointment.getDoctor().getName() : "Doctor";
+                String docPhone = appointment.getDoctor().getPhone() != null ? appointment.getDoctor().getPhone() : "N/A";
                 
                 System.out.println("[SMS] SENT TO DR. " + docName.toUpperCase() + " (" + docPhone + "): " +
                     "New appointment confirmed with " + appointment.getPatient().getName() + " on " + appointment.getAppointmentDate());
@@ -82,14 +81,12 @@ public class DoctorController {
     public ResponseEntity<?> addPrescription(
             @PathVariable Long id, 
             @RequestBody PrescriptionRequest request, 
-            Authentication authentication) {
+            @RequestParam Long doctorId) {
             
-        User doctor = (User) authentication.getPrincipal();
-        
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        if (!appointment.getDoctor().getId().equals(doctor.getId())) {
+        if (!appointment.getDoctor().getId().equals(doctorId)) {
             return ResponseEntity.status(403).body("Unauthorized");
         }
         

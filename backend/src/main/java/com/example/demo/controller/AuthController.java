@@ -5,27 +5,18 @@ import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.security.JwtUtil;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin("http://localhost:5173/")
 public class AuthController {
 
     private final UserRepository repository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final AuthenticationManager authenticationManager;
 
-    public AuthController(UserRepository repository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, AuthenticationManager authenticationManager) {
+    public AuthController(UserRepository repository) {
         this.repository = repository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-        this.authenticationManager = authenticationManager;
     }
 
     @PostMapping("/register")
@@ -38,7 +29,7 @@ public class AuthController {
                 null,
                 request.getName(),
                 request.getEmail(),
-                passwordEncoder.encode(request.getPassword()),
+                request.getPassword(), // Storing plain text password
                 request.getRole(),
                 request.getPhone(),
                 request.getSpecialization(),
@@ -48,10 +39,8 @@ public class AuthController {
 
         repository.save(user);
 
-        var jwtToken = jwtUtil.generateToken(user);
-
         return ResponseEntity.ok(new AuthResponse(
-                jwtToken,
+                null, // No token
                 user.getName(),
                 user.getEmail(),
                 user.getRole()
@@ -60,23 +49,19 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
-
         var user = repository.findByEmail(request.getEmail())
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        var jwtToken = jwtUtil.generateToken(user);
+        if (!user.getPassword().equals(request.getPassword())) {
+            return ResponseEntity.status(401).build();
+        }
 
         return ResponseEntity.ok(new AuthResponse(
-                jwtToken,
+                null, // No token
                 user.getName(),
                 user.getEmail(),
                 user.getRole()
         ));
     }
 }
+
