@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin("http://localhost:5173/")
+@CrossOrigin("**")
 public class AuthController {
 
     private final UserRepository repository;

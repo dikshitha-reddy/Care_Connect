@@ -25,7 +25,7 @@ import com.example.demo.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api/patient")
-@CrossOrigin("http://localhost:5173/")
+@CrossOrigin("**")
 public class PatientController {
 
     @Autowired
