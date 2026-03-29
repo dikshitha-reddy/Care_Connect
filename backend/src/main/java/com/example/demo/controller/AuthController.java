@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin("**")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final UserRepository repository;
@@ -34,17 +34,16 @@ public class AuthController {
                 request.getPhone(),
                 request.getSpecialization(),
                 request.getExperience(),
-                request.getFee()
-        );
+                request.getFee());
 
         repository.save(user);
 
         return ResponseEntity.ok(new AuthResponse(
+                user.getId(),
                 null, // No token
                 user.getName(),
                 user.getEmail(),
-                user.getRole()
-        ));
+                user.getRole()));
     }
 
     @PostMapping("/login")
@@ -57,11 +56,10 @@ public class AuthController {
         }
 
         return ResponseEntity.ok(new AuthResponse(
+                user.getId(),
                 null, // No token
                 user.getName(),
                 user.getEmail(),
-                user.getRole()
-        ));
+                user.getRole()));
     }
 }
-

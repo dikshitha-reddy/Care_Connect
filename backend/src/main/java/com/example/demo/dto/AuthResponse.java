@@ -2,6 +2,7 @@ package com.example.demo.dto;
 
 import com.example.demo.model.Role;
 public class AuthResponse {
+    private Long id;
     private String token;
     private String name;
     private String email;
@@ -10,11 +11,20 @@ public class AuthResponse {
     public AuthResponse() {
     }
 
-    public AuthResponse(String token, String name, String email, Role role) {
+    public AuthResponse(Long id, String token, String name, String email, Role role) {
+        this.id = id;
         this.token = token;
         this.name = name;
         this.email = email;
         this.role = role;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getToken() {
