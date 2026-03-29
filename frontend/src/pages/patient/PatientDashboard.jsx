@@ -21,7 +21,7 @@ const PatientDashboard = () => {
     try {
       const [docsRes, apptsRes] = await Promise.all([
         api.get('/patient/doctors'),
-        api.get('/patient/appointments')
+        api.get('/patient/appointments', { params: { patientId: user.id } })
       ]);
       setDoctors(docsRes.data);
       setAppointments(apptsRes.data);
@@ -40,7 +40,7 @@ const PatientDashboard = () => {
     e.preventDefault();
     setIsBooking(true);
     try {
-      await api.post('/patient/appointments', bookingData);
+      await api.post('/patient/appointments', bookingData, { params: { patientId: user.id } });
       toast.success('Appointment booked successfully!');
       fetchData(); // Refresh list
       setBookingData({ doctorId: '', appointmentDate: '', appointmentTime: '', notes: '' });
